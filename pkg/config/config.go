@@ -5,11 +5,13 @@ type InfraConfig struct {
 	AppSecret       string `cfg:"APP_SECRET" default:""`
 
 	// 数据库配置
-	MYSQL_HOST     string `cfg:"MYSQL_HOST"`
-	MYSQL_PORT     int    `cfg:"MYSQL_PORT"`
-	MYSQL_USER     string `cfg:"MYSQL_USER"`
-	MYSQL_PASSWORD string `cfg:"MYSQL_PASSWORD"`
-	MYSQL_DBNAME   string `cfg:"MYSQL_DBNAME"`
+	DB_TYPE     string `cfg:"DB_TYPE" default:"mysql"`
+	DB_HOST     string `cfg:"DB_HOST"`
+	DB_PORT     int    `cfg:"DB_PORT"`
+	DB_USER     string `cfg:"DB_USER"`
+	DB_PASSWORD string `cfg:"DB_PASSWORD"`
+	DB_DBNAME   string `cfg:"DB_DBNAME"`
+	DB_SCHEMA   string `cfg:"DB_SCHEMA"`
 
 	// Redis配置
 	RedisAddr     string `cfg:"REDIS_ADDR" default:"localhost:6379"`
