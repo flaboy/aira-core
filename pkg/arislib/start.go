@@ -1,13 +1,13 @@
 package arislib
 
 import (
-	"github.com/flaboy/aira/aira-core/pkg/cluster"
-	"github.com/flaboy/aira/aira-core/pkg/config"
-	"github.com/flaboy/aira/aira-core/pkg/database"
-	"github.com/flaboy/aira/aira-core/pkg/mailer"
-	"github.com/flaboy/aira/aira-core/pkg/redis"
-	"github.com/flaboy/aira/aira-core/pkg/storage"
-	"github.com/flaboy/aira/aira-core/pkg/tasklib"
+	"github.com/flaboy/aira-core/pkg/cluster"
+	"github.com/flaboy/aira-core/pkg/config"
+	"github.com/flaboy/aira-core/pkg/database"
+	"github.com/flaboy/aira-core/pkg/mailer"
+	"github.com/flaboy/aira-core/pkg/redis"
+	"github.com/flaboy/aira-core/pkg/storage"
+	"github.com/flaboy/aira-core/pkg/tasklib"
 )
 
 func Start(cfg *config.InfraConfig) error {

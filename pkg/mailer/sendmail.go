@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/flaboy/aira/aira-core/pkg/config"
+	"github.com/flaboy/aira-core/pkg/config"
 
 	"github.com/knadh/smtppool"
 )

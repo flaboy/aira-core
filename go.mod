@@ -1,4 +1,4 @@
-module github.com/flaboy/aira/aira-core
+module github.com/flaboy/aira-core
 
 go 1.24.4
 

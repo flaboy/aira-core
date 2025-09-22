@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/flaboy/aira/aira-core/pkg/config"
+	"github.com/flaboy/aira-core/pkg/config"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

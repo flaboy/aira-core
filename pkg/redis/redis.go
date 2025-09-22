@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/flaboy/aira/aira-core/pkg/config"
+	"github.com/flaboy/aira-core/pkg/config"
 
 	redis "github.com/redis/go-redis/v9"
 )

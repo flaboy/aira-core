@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/flaboy/aira/aira-core/pkg/config"
+	"github.com/flaboy/aira-core/pkg/config"
 	"github.com/speps/go-hashids/v2"
 )
 

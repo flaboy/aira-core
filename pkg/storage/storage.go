@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/flaboy/aira/aira-core/pkg/config"
+	"github.com/flaboy/aira-core/pkg/config"
 )
 
 var storages = make(map[string]Storage)

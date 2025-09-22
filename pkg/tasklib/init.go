@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/flaboy/aira/aira-core/pkg/config"
-	"github.com/flaboy/aira/aira-core/pkg/redis"
+	"github.com/flaboy/aira-core/pkg/config"
+	"github.com/flaboy/aira-core/pkg/redis"
 
 	"log/slog"
 

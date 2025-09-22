@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/flaboy/aira/aira-core/pkg/redis"
+	"github.com/flaboy/aira-core/pkg/redis"
 
 	"github.com/google/uuid"
 )

@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/flaboy/aira/aira-core/pkg/redis"
+	"github.com/flaboy/aira-core/pkg/redis"
 
 	"log"
 )
