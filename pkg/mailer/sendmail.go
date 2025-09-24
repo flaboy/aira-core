@@ -2,7 +2,7 @@ package mailer
 
 import (
 	"crypto/tls"
-	"log"
+	"log/slog"
 	"net/smtp"
 	"strings"
 	"time"
@@ -86,10 +86,10 @@ func (m *Mailer) SendTo(to, subject, body string) error {
 		Subject: subject,
 		HTML:    []byte(body),
 	}
-	log.Printf("Send email to %s, subject: %s", to, subject)
+	slog.Info("Send email", "to", to, "subject", subject)
 	err := sender.Send(e)
 	if err != nil {
-		log.Printf("Failed to send email to %s: %v", to, err)
+		slog.Error("Failed to send email", "to", to, "error", err)
 	}
 	return err
 }

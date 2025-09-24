@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"strings"
 
 	"github.com/flaboy/aira-core/pkg/config"
@@ -52,13 +52,13 @@ func connectDatabase(params DbInfo) error {
 			params.DbUser, params.DbPassword, params.DbHost, params.DbPort, params.DbName)
 		driver = mysql.Open(dbInfo)
 	default:
-		log.Fatal("unsupported database type", "type", params.DbType)
+		slog.Error("unsupported database type", "type", params.DbType)
 		return fmt.Errorf("unsupported database type: %s", params.DbType)
 	}
 
 	db, err = gorm.Open(driver, gormConfig)
 	if err != nil {
-		log.Fatal("sql.Open failed", "error", err)
+		slog.Error("sql.Open failed", "error", err)
 		return err
 	}
 	return nil

@@ -2,12 +2,11 @@ package cluster
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"time"
 
 	"github.com/flaboy/aira-core/pkg/redis"
-
-	"log"
 )
 
 var master *Election
@@ -76,7 +75,7 @@ func (k *Election) check() bool {
 			}
 		}()
 		machine, _ := os.Hostname()
-		log.Printf("Cluster master elected: %s, runUid: %s", machine, k.runUid)
+		slog.Info("Cluster master elected", "machine", machine, "runUid", k.runUid)
 		return true
 	} else {
 		k.isRunNode = false
