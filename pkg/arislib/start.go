@@ -1,6 +1,8 @@
 package arislib
 
 import (
+	"log/slog"
+
 	"github.com/flaboy/aira-core/pkg/cluster"
 	"github.com/flaboy/aira-core/pkg/config"
 	"github.com/flaboy/aira-core/pkg/database"
@@ -38,7 +40,9 @@ func Start(cfg *config.InfraConfig) error {
 		return err
 	}
 
+	slog.Info("About to initialize SMTP mailer")
 	mailer.InitSMTP()
+	slog.Info("SMTP mailer initialization completed")
 
 	return nil
 }
