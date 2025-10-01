@@ -1,4 +1,4 @@
-package arislib
+package aira
 
 import (
 	"log/slog"
