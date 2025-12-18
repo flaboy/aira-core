@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -160,17 +161,22 @@ func (s *LocalStorage) Output(path string, req *http.Request, w http.ResponseWri
 }
 
 func (s *LocalStorage) UploadHttpRequest(req *http.Request) (map[string]interface{}, error) {
+	log.Println("=== Local Storage Upload Debug ===")
+
 	// 检查路径参数
 	token := req.FormValue("token")
+	log.Printf("1. Token: %s", token)
 	if token == "" {
 		return nil, errors.New("path is required")
 	}
 
 	id := redis.RedisClient.Get(req.Context(), token)
 	if id.Err() != nil {
+		log.Printf("2. Redis error: %v", id.Err())
 		return nil, id.Err()
 	}
 	path := id.Val()
+	log.Printf("3. Base path from token: %s", path)
 	if path == "" {
 		return nil, errors.New("path is required")
 	}
@@ -178,24 +184,44 @@ func (s *LocalStorage) UploadHttpRequest(req *http.Request) (map[string]interfac
 	// 获取上传文件
 	file, header, err := req.FormFile("file")
 	if err != nil {
+		log.Printf("4. FormFile error: %v", err)
 		return nil, err
 	}
 	defer file.Close()
+	log.Printf("5. File received: %s (size: %d bytes)", header.Filename, header.Size)
 
 	// 获取文件类型
 	ext := filepath.Ext(header.Filename)
 	contentType := header.Header.Get("Content-Type")
-	path = filepath.Join(path, uuid.New().String()+ext)
+	log.Printf("6. Content-Type: %s, Extension: %s", contentType, ext)
+
+	// 检查是否保留原始文件名
+	keepFilename := req.FormValue("keep_filename")
+	filename := req.FormValue("filename")
+	log.Printf("7. keep_filename: %s, filename: %s", keepFilename, filename)
+
+	if keepFilename == "true" && filename != "" {
+		path = filepath.Join(path, filename)
+		log.Printf("8. Using original filename, final path: %s", path)
+	} else {
+		path = filepath.Join(path, uuid.New().String()+ext)
+		log.Printf("8. Using UUID filename, final path: %s", path)
+	}
 
 	// 上传文件到存储
+	log.Printf("9. Uploading to: %s", path)
 	err = s.PutObject(file, path, WithMimeType(contentType))
 	if err != nil {
+		log.Printf("10. PutObject error: %v", err)
 		return nil, err
 	}
+
+	url := s.GetURL(path)
+	log.Printf("11. Upload successful! Path: %s, URL: %s", path, url)
 
 	// 返回上传结果
 	return map[string]interface{}{
 		"path": path,
-		"url":  s.GetURL(path),
+		"url":  url,
 	}, nil
 }
