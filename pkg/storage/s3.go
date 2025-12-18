@@ -308,7 +308,7 @@ func (s *S3Storage) GetUploadContext(ctx context.Context, path string) (*UploadC
 
 	// 如果存储是 public，添加 ACL 条件
 	if s.public {
-		conditions = append(conditions, map[string]string{"acl": "public-read"})
+		conditions = append(conditions, map[string]string{"x-amz-acl": "public-read"})
 	}
 
 	policy := map[string]interface{}{
