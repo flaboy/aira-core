@@ -156,18 +156,18 @@ func (s *S3Storage) SetObjectACL(path string, acl interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid ACL type")
 	}
-	
+
 	input := &s3.PutObjectAclInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(path),
 		ACL:    aclType,
 	}
-	
+
 	_, err := s.client.PutObjectAcl(context.TODO(), input)
 	if err != nil {
 		return fmt.Errorf("set object ACL failed: %w", err)
 	}
-	
+
 	return nil
 }
 
