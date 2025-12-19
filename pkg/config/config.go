@@ -20,12 +20,13 @@ type InfraConfig struct {
 
 	// 邮件配置
 	SendMail struct {
-		Host     string `cfg:"HOST"`
-		Port     int    `cfg:"PORT" default:"587"`
-		Username string `cfg:"USERNAME"`
-		Password string `cfg:"PASSWORD"`
-		From     string `cfg:"MAILFROM" default:""`
-		TLS      string `cfg:"TLS" default:"NONE"`
+		Host         string `cfg:"HOST"`
+		Port         int    `cfg:"PORT" default:"587"`
+		Username     string `cfg:"USERNAME"`
+		Password     string `cfg:"PASSWORD"`
+		From         string `cfg:"MAILFROM" default:""`
+		TLS          string `cfg:"TLS" default:"NONE"`
+		ResendAPIKey string `cfg:"RESEND_API_KEY" default:""`
 	} `cfg:"SMTP"`
 
 	// 任务队列配置

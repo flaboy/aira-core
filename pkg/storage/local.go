@@ -143,6 +143,12 @@ func (s *LocalStorage) GetUploadContext(ctx context.Context, path string) (*Uplo
 	}, nil
 }
 
+// SetObjectACL is a no-op for local storage (ACL not applicable)
+func (s *LocalStorage) SetObjectACL(path string, acl interface{}) error {
+	// Local storage doesn't support ACL, so this is a no-op
+	return nil
+}
+
 func (s *LocalStorage) Output(path string, req *http.Request, w http.ResponseWriter) error {
 	fullPath := filepath.Join(s.basePath, path)
 	file, err := os.Open(fullPath)

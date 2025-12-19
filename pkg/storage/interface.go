@@ -79,4 +79,7 @@ type Storage interface {
 
 	// GetUploadContext 获取上传上下文
 	GetUploadContext(ctx context.Context, path string) (*UploadContext, error)
+
+	// SetObjectACL 设置对象的访问控制列表
+	SetObjectACL(path string, acl interface{}) error
 }

@@ -149,6 +149,28 @@ func (s *S3Storage) DeleteObject(path string) error {
 	return nil
 }
 
+// SetObjectACL sets the ACL for a specific S3 object
+func (s *S3Storage) SetObjectACL(path string, acl interface{}) error {
+	path = strings.TrimSuffix(path, "/")
+	aclType, ok := acl.(types.ObjectCannedACL)
+	if !ok {
+		return fmt.Errorf("invalid ACL type")
+	}
+	
+	input := &s3.PutObjectAclInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(path),
+		ACL:    aclType,
+	}
+	
+	_, err := s.client.PutObjectAcl(context.TODO(), input)
+	if err != nil {
+		return fmt.Errorf("set object ACL failed: %w", err)
+	}
+	
+	return nil
+}
+
 func (s *S3Storage) GetURL(path string, opts ...GetOption) string {
 	path = strings.TrimSuffix(path, "/")
 	if s.public {
@@ -298,23 +320,15 @@ func (s *S3Storage) moveDirectory(src, dst string) error {
 func (s *S3Storage) GetUploadContext(ctx context.Context, path string) (*UploadContext, error) {
 	// 生成上传策略
 	expiration := time.Now().Add(15 * time.Minute)
-	conditions := []interface{}{
-		map[string]string{"bucket": s.bucket},
-		[]interface{}{"starts-with", "$key", path},
-		map[string]string{"success_action_status": "200"},
-		[]interface{}{"content-length-range", 0, 104857600}, // 100MB
-		[]interface{}{"starts-with", "$Content-Type", ""},   // 允许所有Content-Type
-	}
-
-	// 如果存储是 public，添加 ACL 条件
-	// 注意：S3 POST 策略中，表单字段需要使用 $ 前缀
-	if s.public {
-		conditions = append(conditions, map[string]string{"$x-amz-acl": "public-read"})
-	}
-
 	policy := map[string]interface{}{
 		"expiration": expiration.UTC().Format(time.RFC3339),
-		"conditions": conditions,
+		"conditions": []interface{}{
+			map[string]string{"bucket": s.bucket},
+			[]interface{}{"starts-with", "$key", path},
+			map[string]string{"success_action_status": "200"},
+			[]interface{}{"content-length-range", 0, 104857600}, // 100MB
+			[]interface{}{"starts-with", "$Content-Type", ""},   // 允许所有Content-Type
+		},
 	}
 
 	// 将策略转换为JSON
@@ -339,7 +353,6 @@ func (s *S3Storage) GetUploadContext(ctx context.Context, path string) (*UploadC
 		Signature:  signature,
 		Dir:        path,
 		Expiration: expiration.UTC().Format(time.RFC3339),
-		Public:     s.public,
 	}
 
 	return &UploadContext{
