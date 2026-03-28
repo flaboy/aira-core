@@ -15,6 +15,19 @@ import (
 	"github.com/resend/resend-go/v3"
 )
 
+type Attachment struct {
+	Filename    string
+	ContentType string
+	Content     []byte
+}
+
+type SendRequest struct {
+	To          string
+	Subject     string
+	Body        string
+	Attachments []Attachment
+}
+
 type Mailer struct {
 	Host         string
 	Port         int
@@ -126,12 +139,20 @@ func InitSMTP() {
 }
 
 func (m *Mailer) SendMail(ctx context.Context, to, subject, body string) error {
+	return m.Send(ctx, SendRequest{
+		To:      to,
+		Subject: subject,
+		Body:    body,
+	})
+}
+
+func (m *Mailer) Send(ctx context.Context, req SendRequest) error {
 	// 如果配置了 Resend，使用 Resend API
 	if m.UseResend && m.resendClient != nil {
 		slog.Info("[Mailer] Routing to Resend API",
 			"use_resend", m.UseResend,
 			"resend_client_exists", m.resendClient != nil)
-		return m.sendViaResend(ctx, to, subject, body)
+		return m.sendViaResend(ctx, req)
 	}
 
 	// 否则使用 SMTP（原有逻辑）
@@ -145,29 +166,40 @@ func (m *Mailer) SendMail(ctx context.Context, to, subject, body string) error {
 		"use_resend", m.UseResend,
 		"resend_client_exists", m.resendClient != nil,
 		"reason", reason)
-	return m.sendViaSMTP(ctx, to, subject, body)
+	return m.sendViaSMTP(ctx, req)
 }
 
 // sendViaResend 通过 Resend API 发送邮件
-func (m *Mailer) sendViaResend(ctx context.Context, to, subject, body string) error {
+func (m *Mailer) sendViaResend(ctx context.Context, req SendRequest) error {
 	startTime := time.Now()
 	slog.Info("[Resend] ========== SendMail START ==========",
-		"to", to,
-		"subject", subject,
+		"to", req.To,
+		"subject", req.Subject,
 		"timestamp", startTime.Format("15:04:05.000000"))
 
 	params := &resend.SendEmailRequest{
 		From:    m.MailFrom,
-		To:      []string{to},
-		Subject: subject,
-		Html:    body,
+		To:      []string{req.To},
+		Subject: req.Subject,
+		Html:    req.Body,
+	}
+	if len(req.Attachments) > 0 {
+		params.Attachments = make([]*resend.Attachment, 0, len(req.Attachments))
+		for _, attachment := range req.Attachments {
+			params.Attachments = append(params.Attachments, &resend.Attachment{
+				Filename:    attachment.Filename,
+				ContentType: attachment.ContentType,
+				Content:     attachment.Content,
+			})
+		}
 	}
 
 	slog.Info("[Resend] Email request prepared",
-		"to", to,
+		"to", req.To,
 		"from", m.MailFrom,
-		"subject", subject,
-		"html_length", len(body))
+		"subject", req.Subject,
+		"html_length", len(req.Body),
+		"attachment_count", len(req.Attachments))
 
 	sendStartTime := time.Now()
 	slog.Info("[Resend] ========== Calling Resend API ==========",
@@ -181,7 +213,7 @@ func (m *Mailer) sendViaResend(ctx context.Context, to, subject, body string) er
 
 	if err != nil {
 		slog.Error("[Resend] ========== SendMail FAILED ==========",
-			"to", to,
+			"to", req.To,
 			"error", err,
 			"error_type", fmt.Sprintf("%T", err),
 			"error_string", err.Error(),
@@ -193,9 +225,9 @@ func (m *Mailer) sendViaResend(ctx context.Context, to, subject, body string) er
 	}
 
 	slog.Info("[Resend] ========== SendMail SUCCESS ==========",
-		"to", to,
+		"to", req.To,
 		"from", m.MailFrom,
-		"subject", subject,
+		"subject", req.Subject,
 		"email_id", sent.Id,
 		"total_duration_ms", totalDuration.Milliseconds(),
 		"send_duration_ms", sendDuration.Milliseconds(),
@@ -207,11 +239,11 @@ func (m *Mailer) sendViaResend(ctx context.Context, to, subject, body string) er
 }
 
 // sendViaSMTP 通过 SMTP 发送邮件（原有逻辑）
-func (m *Mailer) sendViaSMTP(ctx context.Context, to, subject, body string) error {
+func (m *Mailer) sendViaSMTP(ctx context.Context, req SendRequest) error {
 	startTime := time.Now()
 	slog.Info("[SMTP] ========== SendMail START ==========",
-		"to", to,
-		"subject", subject,
+		"to", req.To,
+		"subject", req.Subject,
 		"timestamp", startTime.Format("15:04:05.000000"))
 
 	sender := m.pool
@@ -226,10 +258,24 @@ func (m *Mailer) sendViaSMTP(ctx context.Context, to, subject, body string) erro
 		"prep_timestamp", emailPrepTime.Format("15:04:05.000000"))
 
 	e := smtppool.Email{
-		To:      []string{to},
+		To:      []string{req.To},
 		From:    mailfrom,
-		Subject: subject,
-		HTML:    []byte(body),
+		Subject: req.Subject,
+		HTML:    []byte(req.Body),
+	}
+	if len(req.Attachments) > 0 {
+		e.Attachments = make([]smtppool.Attachment, 0, len(req.Attachments))
+		for _, attachment := range req.Attachments {
+			headers := make(map[string][]string)
+			if attachment.ContentType != "" {
+				headers["Content-Type"] = []string{attachment.ContentType}
+			}
+			e.Attachments = append(e.Attachments, smtppool.Attachment{
+				Filename: attachment.Filename,
+				Header:   headers,
+				Content:  attachment.Content,
+			})
+		}
 	}
 
 	// 尝试获取邮件原始字节，用于诊断
@@ -249,10 +295,11 @@ func (m *Mailer) sendViaSMTP(ctx context.Context, to, subject, body string) erro
 	}
 
 	slog.Info("[SMTP] Email object created",
-		"to", to,
+		"to", req.To,
 		"from", mailfrom,
-		"subject", subject,
-		"html_length", len(body),
+		"subject", req.Subject,
+		"html_length", len(req.Body),
+		"attachment_count", len(req.Attachments),
 		"to_count", len(e.To),
 		"to_list", e.To)
 
@@ -277,7 +324,7 @@ func (m *Mailer) sendViaSMTP(ctx context.Context, to, subject, body string) erro
 
 	if err != nil {
 		slog.Error("[SMTP] ========== SendMail FAILED ==========",
-			"to", to,
+			"to", req.To,
 			"error", err,
 			"error_type", fmt.Sprintf("%T", err),
 			"error_string", err.Error(),
@@ -289,9 +336,9 @@ func (m *Mailer) sendViaSMTP(ctx context.Context, to, subject, body string) erro
 	}
 
 	slog.Info("[SMTP] ========== SendMail SUCCESS ==========",
-		"to", to,
+		"to", req.To,
 		"from", mailfrom,
-		"subject", subject,
+		"subject", req.Subject,
 		"total_duration_ms", totalDuration.Milliseconds(),
 		"send_duration_ms", sendDuration.Milliseconds(),
 		"total_duration_seconds", totalDuration.Seconds(),
